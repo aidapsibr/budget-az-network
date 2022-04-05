@@ -29,6 +29,5 @@ cd ..
 ```
 
 ```powershell
-cd ..
 ./setup-vpn.ps1 -environmentName {string} -region {string}
 ```
