@@ -45,6 +45,7 @@ resource "azurerm_route_table" "services_spoke_rt" {
     next_hop_in_ip_address = "10.0.3.4"
   }
 
+  // if you want all traffic to flow through the NVA for logging or filtering
   /* route {
     name           = "default"
     address_prefix = "0.0.0.0/0"
