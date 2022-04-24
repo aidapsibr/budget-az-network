@@ -1,4 +1,4 @@
-# Hub and Spok network on the cheap
+# Hub and Spoke network on the cheap
 
 Hub and spoke network on a budget for labs and experimenting with VPN, DNS, private link, etc.
 
@@ -29,6 +29,5 @@ cd ..
 ```
 
 ```powershell
-cd ..
 ./setup-vpn.ps1 -environmentName {string} -region {string}
 ```
