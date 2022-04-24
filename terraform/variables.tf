@@ -29,3 +29,13 @@ variable "aad_admin_upn" {
 variable "p2s_root_cert_data_base64" {
   type = string
 }
+
+variable "dns_forwarder_deployment_type" {
+  type = string
+  default = "vm"
+}
+
+variable "dns_forwarder_vm_size" {
+  type    = string
+  default = "Standard_B1ls"
+}
