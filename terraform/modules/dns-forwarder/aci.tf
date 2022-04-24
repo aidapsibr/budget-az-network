@@ -1,3 +1,22 @@
+resource "azurerm_subnet" "aci_dnsforwardersubnet" {
+  count = var.deployment_type == "aci" ? 1 : 0
+  address_prefixes     = ["10.0.2.0/29"]
+  name                 = "DnsForwarderSubnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = var.vnet_name
+
+  delegation {
+    name = "ACIDelegationService"
+
+    service_delegation {
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action"
+      ]
+    }
+  }
+}
+
 resource "azurerm_network_profile" "dns_forwarder_network_profile" {
   count = var.deployment_type == "aci" ? 1 : 0
   name                = "${var.environment_name}-${var.location}-hub-dnsforwarder-networkprofile"
@@ -9,7 +28,7 @@ resource "azurerm_network_profile" "dns_forwarder_network_profile" {
 
     ip_configuration {
       name      = "default"
-      subnet_id = var.subnet_id
+      subnet_id = azurerm_subnet.aci_dnsforwardersubnet[0].id
     }
   }
 }

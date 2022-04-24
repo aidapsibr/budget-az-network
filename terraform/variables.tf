@@ -32,7 +32,7 @@ variable "p2s_root_cert_data_base64" {
 
 variable "dns_forwarder_deployment_type" {
   type = string
-  default = "aci"
+  default = "vm"
 }
 
 variable "dns_forwarder_vm_size" {

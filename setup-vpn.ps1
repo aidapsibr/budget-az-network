@@ -70,7 +70,7 @@ $scheduledTaskXml = @"
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments> -command "Set-NetIPInterface $vpnName -InterfaceMetric 24"</Arguments>
+      <Arguments> -command "Set-NetIPInterface $vpnName -InterfaceMetric 23"</Arguments>
     </Exec>
   </Actions>
 </Task>

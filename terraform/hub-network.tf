@@ -13,24 +13,6 @@ resource "azurerm_subnet" "gatewaysubnet" {
   virtual_network_name = azurerm_virtual_network.hub_vnet.name
 }
 
-resource "azurerm_subnet" "dnsforwardersubnet" {
-  address_prefixes     = ["10.0.2.0/29"]
-  name                 = "DnsForwarderSubnet"
-  resource_group_name  = azurerm_resource_group.hub.name
-  virtual_network_name = azurerm_virtual_network.hub_vnet.name
-
-  delegation {
-    name = "ACIDelegationService"
-
-    service_delegation {
-      name    = "Microsoft.ContainerInstance/containerGroups"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/action"
-      ]
-    }
-  }
-}
-
 resource "azurerm_subnet" "nvasubnet" {
   address_prefixes     = ["10.0.3.0/29"]
   name                 = "NvaSubnet"

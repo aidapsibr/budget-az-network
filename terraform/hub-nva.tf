@@ -55,6 +55,10 @@ resource "azurerm_linux_virtual_machine" "hub_nva_vm" {
   identity {
     type = "SystemAssigned"
   }
+
+  depends_on = [
+    module.dns-forwarder
+   ]
 }
 
 resource "azurerm_virtual_machine_extension" "aadauth" {

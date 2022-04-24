@@ -1,6 +1,6 @@
 locals {
-  hub_dns_forwarder_name = "${var.environment_name}-${var.region}-hub-dnsforwarder"
-  custom_data = <<CUSTOM_DATA
+  hub_dns_forwarder_name = "${var.environment_name}-${var.location}-hub-dnsforwarder"
+  custom_data            = <<CUSTOM_DATA
 #cloud-config
 package_upgrade: true
 packages:
@@ -10,6 +10,8 @@ write_files:
     path: /etc/bind/named.conf.options
     content: |
         options {
+          directory "/var/cache/bind";
+          
           recursion yes;
           allow-query { any; }; # do not expose externally
           forwarders {
@@ -25,30 +27,46 @@ runcmd:
   CUSTOM_DATA
 }
 
+resource "azurerm_subnet" "vm_dnsforwardersubnet" {
+  count                = var.deployment_type == "vm" ? 1 : 0
+  address_prefixes     = ["10.0.2.0/29"]
+  name                 = "DnsForwarderSubnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = var.vnet_name
+}
+
 resource "random_password" "dns_forwarder_password" {
+  count = var.deployment_type == "vm" ? 1 : 0
+
   length  = 16
   special = true
 }
 
 resource "azurerm_network_interface" "hub_dns_forwarder_nic" {
-  name                 = "${local.hub_dns_forwarder_name}-nic"
-  location             = azurerm_resource_group.hub.location
-  resource_group_name  = azurerm_resource_group.hub.name
+  count = var.deployment_type == "vm" ? 1 : 0
+
+  name                = "${local.hub_dns_forwarder_name}-nic"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  dns_servers = ["168.63.129.16"] #always use azure recursive resolver so we don't circular reference DNS on creation
 
   ip_configuration {
     name                          = local.hub_dns_forwarder_name
-    subnet_id                     = var.subnet_id
+    subnet_id                     = azurerm_subnet.vm_dnsforwardersubnet[0].id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.2.4"
   }
 }
 
 resource "azurerm_linux_virtual_machine" "hub_dns_forwarder_vm" {
+  count = var.deployment_type == "vm" ? 1 : 0
+
   name                  = local.hub_dns_forwarder_name
-  location              = azurerm_resource_group.hub.location
-  resource_group_name   = azurerm_resource_group.hub.name
-  network_interface_ids = [azurerm_network_interface.hub_dns_forwarder_nic.id]
-  size                  = var.dns_forwarder_size
+  location              = var.location
+  resource_group_name   = var.resource_group_name
+  network_interface_ids = [azurerm_network_interface.hub_dns_forwarder_nic[0].id]
+  size                  = var.vm_size
 
   source_image_reference {
     publisher = "Canonical"
@@ -67,8 +85,8 @@ resource "azurerm_linux_virtual_machine" "hub_dns_forwarder_vm" {
   }
 
   computer_name  = local.hub_dns_forwarder_name
-  admin_username = var.dns_forwarder_admin
-  admin_password = random_password.dns_forwarder_password.result
+  admin_username = var.vm_admin
+  admin_password = random_password.dns_forwarder_password[0].result
 
   encryption_at_host_enabled = true
 
@@ -81,8 +99,10 @@ resource "azurerm_linux_virtual_machine" "hub_dns_forwarder_vm" {
 }
 
 resource "azurerm_virtual_machine_extension" "aadauth" {
+  count = var.deployment_type == "vm" ? 1 : 0
+
   name                       = "AADSSHLoginForLinux"
-  virtual_machine_id         = azurerm_linux_virtual_machine.hub_dns_forwarder_vm.id
+  virtual_machine_id         = azurerm_linux_virtual_machine.hub_dns_forwarder_vm[0].id
   publisher                  = "Microsoft.Azure.ActiveDirectory"
   type                       = "AADSSHLoginForLinux"
   type_handler_version       = "1.0"
